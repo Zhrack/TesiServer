@@ -46,7 +46,7 @@ public class Controller extends HttpServlet{
 		
 		System.out.println("servlet entered");
 		String option = request.getParameter("option");
-		System.out.println("option scelta: " + option);
+		System.out.println("chosen option: " + option);
 		
 		if(option == null) {
 			request.getRequestDispatcher("/Home.html").forward(request, response);
