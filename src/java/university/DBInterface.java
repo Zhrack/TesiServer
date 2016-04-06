@@ -11,7 +11,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +23,7 @@ import java.util.logging.Logger;
  */
 public class DBInterface {
 
-    private static final String url = "jdbc:postgresql://localhost/sample_db";
+    private static final String url = "jdbc:postgresql://localhost:5432/rome_osm";
     private final String user = "postgres";
     private final String password = "admin";
     
@@ -32,9 +31,10 @@ public class DBInterface {
  public Connection connectDB() {
         Connection conn = null;
         try {
+            Class.forName("org.postgresql.Driver").newInstance();
             conn = DriverManager.getConnection(url, user, password);
             System.out.println("Connected to the PostgreSQL server successfully.");
-        } catch (SQLException e) {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
         }
  
@@ -62,23 +62,41 @@ public class DBInterface {
       }
   }
 
-  public List GetBooks() {
+  public List GetPointList(String latitude, String longitude, String radius) {
 
-      List<String> list = new ArrayList<String>();
+      List<PointInfo> list = new ArrayList<PointInfo>();
 
       try {
-
-//          Class.forName("com.mysql.jdbc.Driver").newInstance();
           Connection con = connectDB();
 
           Statement stmt = con.createStatement();
+          
+          String devicePoint = "'POINT(" + longitude + " " + latitude + ")', 4326";
 
-          ResultSet result = stmt.executeQuery("SELECT * FROM books");
+          ResultSet result = stmt.executeQuery(
+                "SELECT name, ST_X(geom) AS longitude, ST_Y(geom) AS latitude,\n" +
+                "ST_Distance(ST_Centroid(geom)::geography, ST_GeomFromText(" + devicePoint + ")::geography) AS distance,\n" +
+                "tags\n" +
+                "FROM rome_italy_osm_point\n" +
+                "WHERE\n" +
+                "(historic IS NOT NULL OR\n" +
+                "tourism IS NOT NULL) AND\n" +
+                "name IS NOT NULL AND\n" +
+                "ST_DWithin(ST_Centroid(geom)::geography, ST_GeomFromText(" + devicePoint + ")::geography, " + radius + ")\n" +
+                "ORDER BY distance ASC;");
           
           while(result.next())
           {
-        	  System.out.println("getBooks(): ID: " + result.getString("id"));
-             list.add(result.getString("id"));
+            System.out.println("GetPointList(): Name: " + result.getString("name"));
+            PointInfo data = new PointInfo();
+            
+            data.setName(result.getString("name"));
+            data.setLatitude(result.getDouble("latitude"));
+            data.setLongitude(result.getDouble("longitude"));
+            data.setDistance(result.getFloat("distance"));
+            data.setWikiText(result.getString("tags"));
+                  
+            list.add(data);
           } 
 
           con.close();

@@ -25,18 +25,16 @@ import org.json.JSONObject;
 @WebServlet("/Controller")
 public class Controller extends HttpServlet{
     private static final long serialVersionUID = 1L;
+    
+    private DBInterface dBInterface;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
     public Controller() {
         super();
-        try{
-			Class.forName("com.mysql.jdbc.Driver").newInstance();
-		}
-		catch(Exception e){
-			System.out.println(e.toString());
-		}
+        
+        dBInterface = new DBInterface();
     }
 
 	/**
@@ -52,10 +50,15 @@ public class Controller extends HttpServlet{
 			request.getRequestDispatcher("/Home.html").forward(request, response);
 		}
 		 
-		if("bookList".equals(option))
+		if("getPointList".equals(option))
 		{
 			List list = null;
-			
+			String latitude = request.getParameter("latitude");
+                        String longitude = request.getParameter("longitude");
+                        String radius = request.getParameter("radius");
+                        
+                        list = dBInterface.GetPointList(latitude, longitude, radius);
+                        
 			JSONObject jsonObj = new JSONObject();
 			try {
 				jsonObj.put("list", list);
