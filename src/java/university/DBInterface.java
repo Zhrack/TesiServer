@@ -72,18 +72,45 @@ public class DBInterface {
           Statement stmt = con.createStatement();
           
           String devicePoint = "'POINT(" + longitude + " " + latitude + ")', 4326";
-
-          ResultSet result = stmt.executeQuery(
+          
+          String query = 
                 "SELECT name, ST_X(geom) AS longitude, ST_Y(geom) AS latitude,\n" +
                 "ST_Distance(ST_Centroid(geom)::geography, ST_GeomFromText(" + devicePoint + ")::geography) AS distance,\n" +
                 "tags\n" +
                 "FROM rome_italy_osm_point\n" +
                 "WHERE\n" +
-                "(historic IS NOT NULL OR\n" +
-                "tourism IS NOT NULL) AND\n" +
+                "historic IS NOT NULL AND\n" +
                 "name IS NOT NULL AND\n" +
                 "ST_DWithin(ST_Centroid(geom)::geography, ST_GeomFromText(" + devicePoint + ")::geography, " + radius + ")\n" +
-                "ORDER BY distance ASC;");
+                "\n" +
+                "UNION\n" +
+                "\n" +
+                "SELECT name, ST_X(ST_Centroid(geom)) AS longitude, ST_Y(ST_Centroid(geom)) AS latitude,\n" +
+                "ST_Distance(ST_Centroid(geom)::geography, ST_GeomFromText(" + devicePoint + ")::geography) AS distance,\n" +
+                "tags\n" +
+                "FROM rome_italy_osm_line\n" +
+                "WHERE \n" +
+                "historic IS NOT NULL AND\n" +
+                "name IS NOT NULL AND\n" +
+                "ST_DWithin(ST_Centroid(geom)::geography, ST_GeomFromText(" + devicePoint + ")::geography, " + radius + ")\n" +
+                "\n" +
+                "UNION\n" +
+                "\n" +
+                "SELECT\n" +
+                "name, \n" +
+                "ST_X(ST_StartPoint(ST_ExteriorRing(ST_GeometryN(geom, 1)))) AS longitude, \n" +
+                "ST_Y(ST_StartPoint(ST_ExteriorRing(ST_GeometryN(geom, 1)))) AS latitude, \n" +
+                "ST_Distance(ST_Centroid(geom)::geography, ST_GeomFromText(" + devicePoint + ")::geography) AS distance,\n" +
+                "tags\n" +
+                "FROM\n" +
+                "rome_italy_osm_polygon\n" +
+                "WHERE\n" +
+                "historic IS NOT NULL AND\n" +
+                "name IS NOT NULL AND\n" +
+                "ST_DWithin(ST_Centroid(geom)::geography, ST_GeomFromText(" + devicePoint + ")::geography, " + radius + ")\n" +
+                "ORDER BY distance ASC;";
+
+          ResultSet result = stmt.executeQuery(query);
           
           while(result.next())
           {
