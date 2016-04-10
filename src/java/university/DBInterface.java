@@ -23,9 +23,9 @@ import java.util.logging.Logger;
  */
 public class DBInterface {
 
-    private static final String url = "jdbc:postgresql://localhost:5432/rome_osm";
+    private static final String url = "jdbc:postgresql://aazw7m4e04vdwx.cqm5ejeb3xmk.us-west-2.rds.amazonaws.com:5432/osm";
     private final String user = "postgres";
-    private final String password = "admin";
+    private final String password = "postgres";
     
 
  public Connection connectDB() {

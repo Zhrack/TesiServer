@@ -70,7 +70,7 @@ public class Controller extends HttpServlet{
 		    response.getWriter().write(jsonObj.toString());
 		}
 		else{
-			System.out.println("non trovato\n");
+			System.out.println("Error option: " + option + " not found\n");
 		}
 	}
 
