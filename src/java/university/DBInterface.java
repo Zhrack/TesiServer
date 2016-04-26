@@ -24,8 +24,10 @@ import java.util.logging.Logger;
 public class DBInterface {
 
     private static final String url = "jdbc:postgresql://aazw7m4e04vdwx.cqm5ejeb3xmk.us-west-2.rds.amazonaws.com:5432/osm";
+//    private static final String url = "jdbc:postgresql://localhost:5432/rome_osm";
     private final String user = "postgres";
     private final String password = "postgres";
+//    private final String password = "admin";
     
 
  public Connection connectDB() {
@@ -74,9 +76,13 @@ public class DBInterface {
           String devicePoint = "'POINT(" + longitude + " " + latitude + ")', 4326";
           
           String query = 
-                "SELECT name, ST_X(geom) AS longitude, ST_Y(geom) AS latitude,\n" +
+                "SELECT name, distance, wiki_text AS wiki,\n" +
+                "latitude,\n" +
+                "longitude\n" +
+                "FROM (SELECT name, ST_X(geom) AS longitude, ST_Y(geom) AS latitude,\n" +
                 "ST_Distance(ST_Centroid(geom)::geography, ST_GeomFromText(" + devicePoint + ")::geography) AS distance,\n" +
-                "tags\n" +
+                "tags,\n" +
+                "osm_id\n" +
                 "FROM rome_italy_osm_point\n" +
                 "WHERE\n" +
                 "historic IS NOT NULL AND\n" +
@@ -87,7 +93,8 @@ public class DBInterface {
                 "\n" +
                 "SELECT name, ST_X(ST_Centroid(geom)) AS longitude, ST_Y(ST_Centroid(geom)) AS latitude,\n" +
                 "ST_Distance(ST_Centroid(geom)::geography, ST_GeomFromText(" + devicePoint + ")::geography) AS distance,\n" +
-                "tags\n" +
+                "tags,\n" +
+                "osm_id\n" +
                 "FROM rome_italy_osm_line\n" +
                 "WHERE \n" +
                 "historic IS NOT NULL AND\n" +
@@ -101,13 +108,16 @@ public class DBInterface {
                 "ST_X(ST_StartPoint(ST_ExteriorRing(ST_GeometryN(geom, 1)))) AS longitude, \n" +
                 "ST_Y(ST_StartPoint(ST_ExteriorRing(ST_GeometryN(geom, 1)))) AS latitude, \n" +
                 "ST_Distance(ST_Centroid(geom)::geography, ST_GeomFromText(" + devicePoint + ")::geography) AS distance,\n" +
-                "tags\n" +
+                "tags,\n" +
+                "osm_id\n" +
                 "FROM\n" +
                 "rome_italy_osm_polygon\n" +
                 "WHERE\n" +
                 "historic IS NOT NULL AND\n" +
                 "name IS NOT NULL AND\n" +
                 "ST_DWithin(ST_Centroid(geom)::geography, ST_GeomFromText(" + devicePoint + ")::geography, " + radius + ")\n" +
+                ") gis_data, wiki_data  wiki\n" +
+                "WHERE (wiki.osm_id = gis_data.osm_id)\n" +
                 "ORDER BY distance ASC;";
 
           ResultSet result = stmt.executeQuery(query);
@@ -121,7 +131,7 @@ public class DBInterface {
             data.setLatitude(result.getDouble("latitude"));
             data.setLongitude(result.getDouble("longitude"));
             data.setDistance(result.getFloat("distance"));
-            data.setWikiText(result.getString("tags"));
+            data.setWikiText(result.getString("wiki"));
                   
             list.add(data);
           } 

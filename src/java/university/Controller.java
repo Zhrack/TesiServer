@@ -10,6 +10,8 @@ package university;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 
@@ -27,6 +29,7 @@ public class Controller extends HttpServlet{
     private static final long serialVersionUID = 1L;
     
     private DBInterface dBInterface;
+    private WikiHandler wikiHandler;
        
     /**
      * @see HttpServlet#HttpServlet()
@@ -35,6 +38,7 @@ public class Controller extends HttpServlet{
         super();
         
         dBInterface = new DBInterface();
+        wikiHandler = new WikiHandler(dBInterface);
     }
 
 	/**
@@ -69,6 +73,10 @@ public class Controller extends HttpServlet{
 			response.setContentType("application/json");
 		    response.getWriter().write(jsonObj.toString());
 		}
+                else if("updateWiki".equals(option))
+                {
+                    wikiHandler.updateWiki();
+                }
 		else{
 			System.out.println("Error option: " + option + " not found\n");
 		}
