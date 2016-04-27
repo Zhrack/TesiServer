@@ -76,7 +76,7 @@ public class DBInterface {
           String devicePoint = "'POINT(" + longitude + " " + latitude + ")', 4326";
           
           String query = 
-                "SELECT name, distance, wiki_text AS wiki,\n" +
+                "SELECT name, distance, wiki_text AS wiki, lang,\n" +
                 "latitude,\n" +
                 "longitude\n" +
                 "FROM (SELECT name, ST_X(geom) AS longitude, ST_Y(geom) AS latitude,\n" +
@@ -116,8 +116,8 @@ public class DBInterface {
                 "historic IS NOT NULL AND\n" +
                 "name IS NOT NULL AND\n" +
                 "ST_DWithin(ST_Centroid(geom)::geography, ST_GeomFromText(" + devicePoint + ")::geography, " + radius + ")\n" +
-                ") gis_data, wiki_data  wiki\n" +
-                "WHERE (wiki.osm_id = gis_data.osm_id)\n" +
+                ") gis_data LEFT JOIN wiki_data  wiki\n" +
+                "ON (wiki.osm_id = gis_data.osm_id)\n" +
                 "ORDER BY distance ASC;";
 
           ResultSet result = stmt.executeQuery(query);
@@ -132,6 +132,7 @@ public class DBInterface {
             data.setLongitude(result.getDouble("longitude"));
             data.setDistance(result.getFloat("distance"));
             data.setWikiText(result.getString("wiki"));
+            data.setLanguage(result.getString("lang"));
                   
             list.add(data);
           } 

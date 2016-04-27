@@ -64,6 +64,7 @@ public class WikiHandler {
             "id SERIAL NOT NULL,\n" +
             "osm_id numeric NOT NULL,\n" +
             "wiki_text character varying(2000),\n" +
+            "lang character varying(10)," +
             "\n" +
             "CONSTRAINT wiki_data_pkey PRIMARY KEY(id)\n" +
             ")";
@@ -173,12 +174,9 @@ public class WikiHandler {
                 if(wikiPresent)
                 {
                     // connect to jsoup
-                    final String langStr = lang;
-                    final String wikiURLStr = wikiURL;
-                    final String osm_idStr = osm_id;
-                    System.out.println(TAG + "Starting runnable " + wikiURLStr);
+                    System.out.println(TAG + "Starting runnable " + wikiURL);
                     try {
-                        String url = "http://" + langStr + ".wikipedia.org/wiki/" + wikiURLStr;
+                        String url = "http://" + lang + ".wikipedia.org/wiki/" + wikiURL;
                                 System.out.println(TAG + "Connection to wiki " + url);
                                 Document doc = Jsoup.connect(url).get();
 
@@ -197,7 +195,9 @@ public class WikiHandler {
                                 
                                 // Insert text with osm_id to DB
                                 firstParagraphText = firstParagraphText.replaceAll("'", "''");
-                                String insert = "INSERT INTO public.wiki_data(osm_id, wiki_text) VALUES (" + osm_idStr + ", '" + firstParagraphText + "');";
+                                String insert = 
+                                        "INSERT INTO public.wiki_data(osm_id, wiki_text, lang) "
+                                        + "VALUES (" + osm_id + ", '" + firstParagraphText + "', '" + lang + "');";
                                 System.out.println(TAG + insert);
                                 Connection con = dbInterface.connectDB();
                                 if(con == null)

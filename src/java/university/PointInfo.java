@@ -42,6 +42,14 @@ public class PointInfo {
         this.wikiText = wikiText;
     }
 
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+    
     public float getDistance() {
         return distance;
     }
@@ -54,5 +62,6 @@ public class PointInfo {
     private double latitude;
     private double longitude;
     private String wikiText;
+    private String language;
     private float distance;
 }
